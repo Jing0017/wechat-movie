@@ -68,7 +68,7 @@ var tpl = heredoc(function () {/*
  var slides
  $('#poster').on('tap', function(){
  wx.previewImage(slides)
- }
+ })
 
 
  $('h1').on('tap', function(){
@@ -189,6 +189,8 @@ exports.movie = function* (next) {
     var ticket = ticketData.ticket
     var url = this.href
     var params = sign(ticket, url)
+
+
 
     this.body = ejs.render(tpl, params)
 }

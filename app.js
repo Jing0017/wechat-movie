@@ -2,16 +2,14 @@
 
 var Koa = require('koa')
 var serve = require('koa-static')
-var wechat = require('./wechat/g')
 var path = require('path')
-var reply = require('./wx/reply')
 var mongoose = require('mongoose')
 var fs = require('fs')
 
 
 // var dbUrl = 'mongodb://localhost/imooc'
 var dbUrl = 'mongodb://139.224.130.204/imooc'
-
+mongoose.Promise = global.Promise
 mongoose.connect(dbUrl)
 
 // models loading
@@ -46,14 +44,21 @@ var app = new Koa()
 var Router = require('koa-router')
 var router = new Router()
 var game = require('./app/controllers/game')
+var wechat = require('./app/controllers/wechat')
+
+var views = require('koa-views')
+
+app.use(views(__dirname + '/app/views', {
+    extension: 'jade'
+}))
 
 router.get('/movie', game.movie)
-
-app.use(router.routes()).use(router.allowedMethods())
+router.get('/wx', wechat.hear)
+router.post('/wx', wechat.hear)
 
 app.use(serve(path.join(__dirname, 'public')))
 
-app.use(wechat(wx.wechatOptions.wechat, reply.reply))
+app.use(router.routes()).use(router.allowedMethods())
 
 var port = process.env.PORT || 1234
 app.listen(port)

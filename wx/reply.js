@@ -2,6 +2,7 @@
 
 var path = require('path')
 var wx = require('../wx/index')
+var Movie = require('../app/api/movie')
 var wechatApi = wx.getWechat()
 
 exports.reply = function*(next) {
@@ -9,10 +10,15 @@ exports.reply = function*(next) {
 
     if (message.MsgType === 'event') {
         if (message.Event === 'subscribe') {
-            if (message.EventKey) {
-                console.log('扫描二维码进来:' + message.EventKey + ' ' + message.ticket)
-            }
-            this.body = '欢迎订阅此公众号'
+            this.body = '亲爱的,欢迎关注科幻电影世界\n' +
+                '回复 1 ~ 3, 测试文字回复\n' +
+                '回复 4, 测试图文回复\n' +
+                '回复 首页, 进入电影首页\n' +
+                '回复 登录, 进入微信登录绑定\n' +
+                '回复 游戏, 进入游戏页面\n' +
+                '回复 电影名字, 查询电影信息\n' +
+                '回复 语音, 查询电影信息\n' +
+                '也可以点击<a href="http://yjtunnel.viphk.ngrok.org/movie">语音查电影</a>'
         } else if (message.Event === 'unsubscribe') {
             console.log('为啥要离开我')
             this.body = ''
@@ -54,9 +60,34 @@ exports.reply = function*(next) {
             console.log(message.SendLocationInfo.Poiname)
             this.body = '您点击了菜单中： ' + message.EventKey
         }
+    } else if (message.MsgType === 'voice') {
+        var voiceText = message.Recognition
+        var movies = yield Movie.searchByName(voiceText)
+
+        if (!movies || movies.length === 0) {
+            movies = yield Movie.searchByDouban(voiceText)
+        }
+
+        if (movies && movies.length > 0) {
+            var reply = []
+
+            movies = movies.slice(0, 8)
+
+            movies.forEach(function (movie) {
+                reply.push({
+                    title: movie.title,
+                    description: movie.title,
+                    picUrl: movie.images.large,
+                    url: movie.alt
+                })
+            })
+        } else {
+            reply = '没有查询到与 ' + content + ' 匹配的电影,换一个试试'
+        }
+        this.body = reply
     } else if (message.MsgType === 'text') {
         var content = message.Content
-        var reply = '额，你说的 ' + message.Content + ' 太复杂了'
+        reply = '额，你说的 ' + message.Content + ' 太复杂了'
 
         if (content === '1') {
             reply = '天下第一吃大米'
@@ -71,256 +102,30 @@ exports.reply = function*(next) {
                 picUrl: 'http://pic36.nipic.com/20131211/10777699_140106221132_2.jpg',
                 url: 'https://github.com'
             }]
-        } else if (content === '5') {
-            var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'))
-            reply = {
-                type: 'image',
-                mediaId: data.media_id
-            }
-        } else if (content === '6') {
-            var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, '../6.mp4'))
-            reply = {
-                type: 'video',
-                title: '视频内容',
-                description: '跳个舞',
-                mediaId: data.media_id
-            }
-        } else if (content === '7') {
-            var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'))
-            reply = {
-                type: 'music',
-                title: '音乐内容',
-                description: '听首歌',
-                musicUrl: 'http://localhost:3000/7.mp3',
-                thumbMediaId: data.media_id,
-            }
-        } else if (content === '8') {
-            var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'), {type: 'image'})
-            reply = {
-                type: 'image',
-                mediaId: data.media_id
-            }
-        } else if (content === '9') {
-            var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, '../6.mp4'), {
-                type: 'video',
-                description: '{"title":"title", "introduction":"Never give up"}'
-            })
+        } else {
+            var movies = yield Movie.searchByName(content)
 
-            reply = {
-                type: 'video',
-                title: '视频内容',
-                description: '跳个舞',
-                mediaId: data.media_id
-            }
-        } else if (content === '10') {
-            var picData = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'), {})
-
-            var media = {
-                articles: [{
-                    title: 'hahaha',
-                    thumb_media_id: picData.media_id,
-                    author: 'YJ',
-                    digest: 'no digest',
-                    show_cover_pic: 1,
-                    content: 'no content',
-                    content_source_url: 'https://github.com'
-                }, {
-                    title: 'hahaha2',
-                    thumb_media_id: picData.media_id,
-                    author: 'YJ',
-                    digest: 'no digest',
-                    show_cover_pic: 1,
-                    content: 'no content',
-                    content_source_url: 'https://github.com'
-                }]
+            if (!movies || movies.length === 0) {
+                movies = yield Movie.searchByDouban(content)
             }
 
-            data = yield wechatApi.uploadMaterial('news', media, {})
-            data = yield wechatApi.fetchMaterial(data.media_id, 'news', {})
-            console.log(data)
-            var items = data.news_item
-            var news = []
-            items.forEach(function (item) {
-                news.push({
-                    title: item.title,
-                    description: item.digest,
-                    picUrl: picData.url,
-                    url: item.url
+            if (movies && movies.length > 0) {
+                reply = []
+
+                movies = movies.slice(0, 8)
+
+                movies.forEach(function (movie) {
+                    reply.push({
+                        title: movie.title,
+                        description: movie.title,
+                        picUrl: movie.images.large,
+                        url: movie.alt
+                    })
                 })
-            })
-
-            reply = news
-        } else if (content === '11') {
-            var counts = yield wechatApi.countMaterial()
-            console.log(JSON.stringify(counts))
-
-            var results = yield [
-                wechatApi.batchMaterial({
-                    type: 'image',
-                    offset: 0,
-                    count: 10,
-                }),
-                wechatApi.batchMaterial({
-                    type: 'video',
-                    offset: 0,
-                    count: 10,
-                }),
-                wechatApi.batchMaterial({
-                    type: 'voice',
-                    offset: 0,
-                    count: 10,
-                }),
-                wechatApi.batchMaterial({
-                    type: 'news',
-                    offset: 0,
-                    count: 10,
-                })
-            ]
-
-            console.log(JSON.stringify(results))
-            reply = '1'
-        } else if (content === '12') {
-            // var group = yield wechatApi.createGroup('wechat2')
-            // console.log('新分组 wechat2')
-            // console.log(group)
-
-            // var groups = yield wechatApi.fetchGroups()
-            // console.log('加了 wechat2 后的分组列表')
-            // console.log(groups)
-
-            var group2 = yield wechatApi.checkGroup(message.FromUserName)
-
-            console.log('查看自己分组')
-            console.log(group2)
-
-            // var result = yield wechatApi.moveGroup(message.FromUserName, 100)
-            // console.log('移动到100')
-            // console.log(result)
-
-            // var groups2 = yield wechatApi.fetchGroups()
-            // console.log('移动到100 后的分组列表')
-            // console.log(groups2)
-
-            // var result2 = yield wechatApi.moveGroup([message.FromUserName], 101)
-            // console.log('批量移动到101')
-            // console.log(result2)
-
-            // var groups3 = yield wechatApi.fetchGroups()
-            // console.log('批量移动到101 后的分组列表')
-            // console.log(groups3)
-
-            // var result3 = yield wechatApi.updateGroup(100, 'wechat100')
-            // console.log('100 wechat 改名为 wechat100')
-            // console.log(result3)
-
-            // var groups4 = yield wechatApi.fetchGroups()
-            // console.log('100 wechat 改名为 wechat100 后的分组列表')
-            // console.log(groups4)
-
-            // var result4 = yield wechatApi.deleteGroup(100)
-            // console.log('删除100 wechat100分组')
-            // console.log(result4)
-
-            // var groups5 = yield wechatApi.fetchGroups()
-            // console.log('删除100 wechat100分组 后的分组列表')
-            // console.log(groups5)
-
-            reply = 'Group done!'
-        } else if (content === '13') {
-            var user = yield wechatApi.fetchUsers(message.FromUserName, 'en')
-            console.log(user)
-
-            var openIds = [
-                {
-                    openid: message.FromUserName,
-                    lang: 'en'
-                }
-            ]
-            var users = yield wechatApi.fetchUsers(openIds)
-            console.log(users)
-
-            reply = JSON.stringify(user)
-        } else if (content === '14') {
-            var userList = yield wechatApi.listUsers()
-
-            console.log(userList)
-            reply = userList.total
-        } else if (content === '15') {
-            var mpnews = {
-                media_id: 'D3tU27cc_3xmceRnC4IjFMiW0ttHdgG25JSssPkJB9Q'
+            } else {
+                reply = '没有查询到与 ' + content + ' 匹配的电影,换一个试试'
             }
 
-            var text = {
-                content: 'Hello Wechat'
-            }
-
-            var msgData = yield wechatApi.sendByGroup('mpnews', mpnews, 101)
-            console.log(msgData)
-            reply = 'Yeah!'
-        } else if (content === '16') {
-            var mpnews = {
-                media_id: 'D3tU27cc_3xmceRnC4IjFMiW0ttHdgG25JSssPkJB9Q'
-            }
-            var text = {
-                content: 'Hello Wechat'
-            }
-            var msgData = yield wechatApi.previewMass('mpnews', mpnews, 'oRr4xvz2RgGYbgA0RTMZBwRWlRQM')
-            console.log(msgData)
-            reply = 'Yeah!'
-        } else if (content === '17') {
-            var msgData = yield wechatApi.checkMass('6364584982867191702')
-            console.log(msgData)
-            reply = 'Yeah!'
-        } else if (content === '18') {
-
-            var tempQr = {
-                expire_seconds: 40000,
-                action_name: 'QR_SCENE',
-                action_info: {
-                    scene: {
-                        scene_id: 123
-                    }
-                }
-            }
-
-            var permQr = {
-                action_name: 'QR_LIMIT_SCENE',
-                action_info: {
-                    scene: {
-                        scene_id: 123
-                    }
-                }
-            }
-
-            var permStrQr = {
-                action_name: 'QR_LIMIT_STR_SCENE',
-                action_info: {
-                    scene: {
-                        scene_str: 'abc'
-                    }
-                }
-            }
-
-            var qr1 = yield wechatApi.createQrcode(tempQr)
-            var qr2 = yield wechatApi.createQrcode(permQr)
-            var qr3 = yield wechatApi.createQrcode(permStrQr)
-
-            reply = 'Yeah!'
-        } else if (content === '19') {
-            var longUrl = 'http://www.imooc.com/'
-
-            var shortData = yield wechatApi.createShorturl(null, longUrl)
-            reply = shortData.short_url
-        } else if (content === '20') {
-            var semanticData = {
-                query: '长城',
-                city: '南京',
-                category: 'movie',
-                uid: message.FromUserName
-            }
-
-            var _semanticData = yield wechatApi.semantic(semanticData)
-            reply = JSON.stringify(_semanticData)
         }
         this.body = reply
     }

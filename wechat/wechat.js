@@ -1136,8 +1136,7 @@ Wechat.prototype.semantic = function (semanticData) {
  *
  */
 Wechat.prototype.reply = function () {
-    //不知为何会存在多次回复,二次以及后的content可能为undefined
-    var content = this.body || ''
+    var content = this.body
     var message = this.weixin
     var xml = util.tpl(content, message)
 
