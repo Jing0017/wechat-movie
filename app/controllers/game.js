@@ -2,6 +2,7 @@
 
 var wx = require('../../wx/index')
 var util = require('../../libs/util')
+var Movie = require('../api/movie')
 
 exports.guess = function*(next) {
     var wechatApi = wx.getWechat()
@@ -17,6 +18,7 @@ exports.guess = function*(next) {
 
 
 exports.find = function*(next) {
+    var id = this.params.id
     var wechatApi = wx.getWechat()
     var data = yield wechatApi.fetchAccessToken()
     var access_token = data.access_token
@@ -24,6 +26,8 @@ exports.find = function*(next) {
     var ticket = ticketData.ticket
     var url = this.href
     var params = util.sign(ticket, url)
+    var movie = yield Movie.searchById(id)
+    params.movie = movie
 
-    yield this.render('wechat/game', params)
+    yield this.render('wechat/movie', params)
 }

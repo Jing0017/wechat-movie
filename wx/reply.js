@@ -78,7 +78,7 @@ exports.reply = function*(next) {
                     title: movie.title,
                     description: movie.title,
                     picUrl: movie.poster,
-                    url: 'http://yjtunnel.viphk.ngrok.org/movie' + movie._id
+                    url: 'http://yjtunnel.viphk.ngrok.org/movie/' + movie._id
                 })
             })
         } else {
@@ -119,7 +119,7 @@ exports.reply = function*(next) {
                         title: movie.title,
                         description: movie.title,
                         picUrl: movie.poster,
-                        url: 'http://yjtunnel.viphk.ngrok.org/movie' + movie._id
+                        url: 'http://yjtunnel.viphk.ngrok.org/movie/' + movie._id
                     })
                 })
             } else {
