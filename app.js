@@ -48,18 +48,20 @@ var wechat = require('./app/controllers/wechat')
 
 var views = require('koa-views')
 
+app.use(serve(path.join(__dirname, 'public')))
+
 app.use(views(__dirname + '/app/views', {
     extension: 'jade'
 }))
 
+app.use(router.routes()).use(router.allowedMethods())
+
 router.get('/movie', game.guess)
 router.get('/movie/:id', game.find)
+
 router.get('/wx', wechat.hear)
+
 router.post('/wx', wechat.hear)
-
-app.use(serve(path.join(__dirname, 'public')))
-
-app.use(router.routes()).use(router.allowedMethods())
 
 var port = process.env.PORT || 1234
 app.listen(port)
