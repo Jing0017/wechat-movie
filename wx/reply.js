@@ -77,8 +77,8 @@ exports.reply = function*(next) {
                 reply.push({
                     title: movie.title,
                     description: movie.title,
-                    picUrl: movie.images.large,
-                    url: movie.alt
+                    picUrl: movie.poster,
+                    url: 'http://yjtunnel.viphk.ngrok.org/movie' + movie._id
                 })
             })
         } else {
@@ -118,8 +118,8 @@ exports.reply = function*(next) {
                     reply.push({
                         title: movie.title,
                         description: movie.title,
-                        picUrl: movie.images.large,
-                        url: movie.alt
+                        picUrl: movie.poster,
+                        url: 'http://yjtunnel.viphk.ngrok.org/movie' + movie._id
                     })
                 })
             } else {

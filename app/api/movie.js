@@ -46,10 +46,39 @@ exports.searchByDouban = function *(q) {
     var response = yield koa_request(options)
     var data = JSON.parse(response.body)
     var subjects = []
+    var movies = []
     if (data && data.subjects) {
         subjects = data.subjects
     }
 
-    return subjects
+    if (subjects.length > 0) {
+        var queryArray = []
+        subjects.forEach(function (item) {
+            queryArray.push(function *() {
+                var movie = yield Movie.findOne({doubanId: item.id})
+                if (movie) {
+                    movies.push(movie)
+                } else {
+                    var directors = item.directors || []
+                    var director = directors[0] || {}
+
+                    movie = new Movie({
+                        director: director.name || '',
+                        title: item.title,
+                        doubanId: item.id,
+                        poster: item.images.large,
+                        year: item.year,
+                        genres: item.genres || []
+                    })
+
+                    movie = yield movie.save()
+                    movies.push(movie)
+                }
+            })
+        })
+
+        yield queryArray
+    }
+    return movies
 
 }
