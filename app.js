@@ -34,6 +34,7 @@ walk(models_path)
 var menu = require('./wx/menu')
 var wx = require('./wx/index')
 var wechatApi = wx.getWechat()
+
 wechatApi.deleteMenu().then(function () {
     wechatApi.createMenu(menu)
 }).then(function (msg) {

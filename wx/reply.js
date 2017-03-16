@@ -78,7 +78,7 @@ exports.reply = function*(next) {
                     title: movie.title,
                     description: movie.title,
                     picUrl: movie.poster,
-                    url: 'http://yjtunnel.viphk.ngrok.org/movie' + movie._id
+                    url: 'http://yjtunnel.viphk.ngrok.org/movie/' + movie._id
                 })
             })
         } else {
@@ -90,11 +90,11 @@ exports.reply = function*(next) {
         reply = '额，你说的 ' + message.Content + ' 太复杂了'
 
         if (content === '1') {
-            reply = '天下第一吃大米'
+            reply = '小电影'
         } else if (content === '2') {
-            reply = '天下第二吃豆腐'
+            reply = '微电影'
         } else if (content === '3') {
-            reply = '天下第三吃咸蛋'
+            reply = '大片'
         } else if (content === '4') {
             reply = [{
                 title: '技术改变世界',
@@ -119,7 +119,7 @@ exports.reply = function*(next) {
                         title: movie.title,
                         description: movie.title,
                         picUrl: movie.poster,
-                        url: 'http://yjtunnel.viphk.ngrok.org/movie' + movie._id
+                        url: 'http://yjtunnel.viphk.ngrok.org/movie/' + movie._id
                     })
                 })
             } else {
